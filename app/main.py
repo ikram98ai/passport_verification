@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from mangum import Mangum
-from .ai import extract_info, verify_passport, FaceNotMatchedException
+from .ai import extract_info, verify_passport, FaceNotFoundException
 from .utils import get_base64_url
 import traceback
 
@@ -15,7 +15,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="app/templates")
 
 
 @app.get("/", response_class=RedirectResponse)
@@ -25,7 +25,14 @@ async def root():
 
 @app.get("/index", response_class=HTMLResponse)
 async def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    context = {
+        "request": request,
+        "extraction_output": None,
+        "extraction_error": None,
+        "verification_result": None,
+        "verification_error": None,
+    }
+    return templates.TemplateResponse("index.html", context)
 
 
 @app.post("/extraction", response_class=HTMLResponse)
@@ -35,20 +42,28 @@ async def passport_info_extraction(
         ..., description="Upload an image of passport for verification."
     ),
 ):
+    output = None
+    error = None
     try:
         passport_base64_url = await get_base64_url(passport_img)
         output = await extract_info(passport_base64_url)
 
     except HTTPException as e:
         traceback.print_exc()
-        raise e
+        error = str(e.detail)
     except Exception as e:
         print(f"Error during extracting data: {e}")
         traceback.print_exc()
-        raise HTTPException(500, str(e))
-    return templates.TemplateResponse(
-        "extraction_result.html", {"request": request, "output": output.model_dump()}
-    )
+        error = str(e)
+        
+    context = {
+        "request": request,
+        "extraction_output": output.model_dump() if output else None,
+        "extraction_error": error,
+        "verification_result": None,
+        "verification_error": None,
+    }
+    return templates.TemplateResponse("index.html", context)
 
 
 @app.post("/verification", response_class=HTMLResponse)
@@ -61,28 +76,28 @@ async def passport_verification(
         ..., description="Upload your image to verify your passport."
     ),
 ):
+    verification_result = None
+    error = None
     try:
-        similarity, matched_face = await verify_passport(capture_img, passport_img)
-        return templates.TemplateResponse(
-            "verification_result.html",
-            {
-                "request": request,
-                "similarity": similarity,
-                "matched_face": matched_face,
-            },
-        )
-    except FaceNotMatchedException as e:
-        return templates.TemplateResponse(
-            "verification_result.html",
-            {"request": request, "error": str(e)},
-        )
+        verification_result = await verify_passport(capture_img, passport_img)
+    except (FaceNotFoundException, ValueError) as e:
+        error = str(e)
     except HTTPException as e:
         traceback.print_exc()
-        raise e
+        error = str(e.detail)
     except Exception as e:
         print(f"Error during passport verification: {e}")
         traceback.print_exc()
-        raise HTTPException(500, str(e))
+        error = str(e)
+        
+    context = {
+        "request": request,
+        "extraction_output": None,
+        "extraction_error": None,
+        "verification_result": verification_result,
+        "verification_error": error,
+    }
+    return templates.TemplateResponse("index.html", context)
 
 
 handler = Mangum(app)

@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from .utils import get_completion, get_content_list, crop_image
 import boto3
+from botocore.exceptions import ClientError
 
 
 class PassportInfo(BaseModel):
@@ -27,7 +28,7 @@ async def extract_info(passport_base64) -> PassportInfo:
     return info
 
 
-class FaceNotMatchedException(Exception):
+class FaceNotFoundException(Exception):
     pass
 
 
@@ -38,17 +39,31 @@ async def verify_passport(capture_img, passport_img):
     source_image = await capture_img.read()
     target_image = await passport_img.read()
 
-    response = rekognition_client.compare_faces(
-        SourceImage={"Bytes": source_image},
-        TargetImage={"Bytes": target_image},
-        SimilarityThreshold=90,  # Set your desired threshold
-    )
-    for face_match in response["FaceMatches"]:
-        similarity = face_match["Similarity"]
+    try:
+        response = rekognition_client.compare_faces(
+            SourceImage={"Bytes": source_image},
+            TargetImage={"Bytes": target_image},
+            SimilarityThreshold=90,  # Set your desired threshold
+        )
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'InvalidParameterException':
+            raise ValueError("Could not detect a face in one of the images, or the image format is not supported. Please use a clear, well-lit image.")
+        else:
+            raise e
+            
+    print("Response: ", response)
+    if response["FaceMatches"]:
+        face_match = response["FaceMatches"][0]
+        score = face_match["Similarity"]
         bbox = face_match["Face"]["BoundingBox"]
-
-        print(f"Face matched with {similarity:.2f}% similarity.\nBounding Box: {bbox}")
         matched_face = await crop_image(passport_img, bbox)
-        return similarity, matched_face
+        return {"confidence_score":score, "detected_face":matched_face, "is_match": True}
 
-    raise FaceNotMatchedException("Face is not Matched")
+    if response["UnmatchedFaces"]:
+        face_unmatch = response["UnmatchedFaces"][0]
+        score = face_unmatch["Confidence"]
+        bbox = face_unmatch['BoundingBox']
+        unmatched_face = await crop_image(passport_img, bbox)
+        return {"confidence_score":score, "detected_face":unmatched_face, "is_match": False}
+
+    raise FaceNotFoundException("Face is not found")
