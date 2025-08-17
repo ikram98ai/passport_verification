@@ -48,6 +48,17 @@ async def get_base64_url(file: UploadFile) -> str:
         print(f"Error processing file {file.filename}: {e}")
         raise HTTPException(400, f"Error processing file {file.filename}: {str(e)}")
 
+async def get_base64(file: UploadFile) -> str:
+    # If UploadFile instances are provided, convert to base64
+    try:
+        print(f"Processing file: {file.filename}")
+        content = await file.read()
+        base64_image = base64.b64encode(content).decode("utf-8")
+        return base64_image
+    except Exception as e:
+        print(f"Error processing file {file.filename}: {e}")
+        raise HTTPException(400, f"Error processing file {file.filename}: {str(e)}")
+
 
 async def crop_image(passport_img: UploadFile, bbox) -> str:
     await passport_img.seek(0)
@@ -64,10 +75,8 @@ async def crop_image(passport_img: UploadFile, bbox) -> str:
     cropped_image.save(byte_stream, format="PNG")
     content = byte_stream.getvalue()
 
-    media_type = "image/PNG"
     base64_image = base64.b64encode(content).decode("utf-8")
-    base64_url = f"data:{media_type};base64,{base64_image}"
-    return base64_url
+    return base64_image
 
 
 def get_content_list(base64_urls: List[str], prompt):
