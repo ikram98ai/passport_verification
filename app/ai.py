@@ -51,7 +51,6 @@ async def verify_passport(capture_img, passport_img):
         else:
             raise e
             
-    print("Response: ", response)
     if response["FaceMatches"]:
         face_match = response["FaceMatches"][0]
         score = face_match["Similarity"]
