@@ -4,7 +4,7 @@ from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from mangum import Mangum
 from ai import extract_info, extract_image, verify_passport
-from utils import get_base64_urls
+from utils import get_base64_url
 import traceback
 
 app = FastAPI(version="0.0.0")
@@ -36,7 +36,7 @@ async def passport_info_extraction(
     ),
 ):
     try:
-        passport_base64 = await get_base64_urls(passport_img)
+        passport_base64 = await get_base64_url(passport_img)
         output = await extract_info(passport_base64)
 
     except HTTPException as e:
@@ -47,9 +47,8 @@ async def passport_info_extraction(
         traceback.print_exc()
         raise HTTPException(500, str(e))
     return templates.TemplateResponse(
-        "extraction_result.html", {"request": request, "output": output}
+        "extraction_result.html", {"request": request, "output": output.model_dump()}
     )
-
 
 
 @app.post("/verification", response_class=HTMLResponse)
@@ -63,8 +62,8 @@ async def passport_verification(
     ),
 ):
     try:
-        passport_base64 = await get_base64_urls(passport_img)
-        capture_base64 = await get_base64_urls(capture_img)
+        passport_base64 = await get_base64_url(passport_img)
+        capture_base64 = await get_base64_url(capture_img)
 
         extract_base64 = await extract_image(passport_base64)
         output = await verify_passport(extract_base64, capture_base64)
