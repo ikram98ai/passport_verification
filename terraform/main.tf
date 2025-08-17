@@ -91,6 +91,14 @@ resource "aws_iam_role_policy" "lambda_policy" {
           "ecr:BatchGetImage"
         ]
         Resource = aws_ecr_repository.passport_verification_repo.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "rekognition:CompareFaces",
+          "rekognition:DetectFaces"
+        ]
+        Resource = "*"
       }
     ]
   })

@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, HTTPException, File, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from mangum import Mangum
 from .ai import extract_info, verify_passport, FaceNotFoundException
@@ -8,6 +9,7 @@ from .utils import get_base64_url
 import traceback
 
 app = FastAPI(version="1.0.0")
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

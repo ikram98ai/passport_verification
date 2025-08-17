@@ -4,43 +4,39 @@
 
 {% block content %}
 <div class="text-center mb-5">
-    <h1 class="fw-bold">Passport Verification Service</h1>
-    <p class="lead">Easily extract information and verify passport identity with AI-powered tools.</p>
+    <h1>Passport Verification Service</h1>
+    <p>Easily extract information and verify passport identity with AI-powered tools.</p>
 </div>
 
 <div class="card">
     <div class="card-header">
-        <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="extraction-tab" data-bs-toggle="tab" data-bs-target="#extraction" type="button" role="tab" aria-controls="extraction" aria-selected="true">Passport Information Extraction</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="verification-tab" data-bs-toggle="tab" data-bs-target="#verification" type="button" role="tab" aria-controls="verification" aria-selected="false">Passport Verification</button>
-            </li>
-        </ul>
+        <div class="nav-tabs">
+            <button class="nav-link active" data-tab="extraction">Passport Information Extraction</button>
+            <button class="nav-link" data-tab="verification">Passport Verification</button>
+        </div>
     </div>
     <div class="card-body">
-        <div class="tab-content" id="myTabContent">
-            <div class="tab-pane fade show active" id="extraction" role="tabpanel" aria-labelledby="extraction-tab">
+        <div class="tab-content">
+            <div class="tab-pane active" id="extraction">
                 <form id="extraction-form" action="/extraction" method="post" enctype="multipart/form-data">
-                    <div class="mb-3">
+                    <div>
                         <label for="passport_img_extraction" class="form-label">Upload Passport Image</label>
                         <input class="form-control" type="file" id="passport_img_extraction" name="passport_img" required>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">
-                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    <button type="submit" class="btn">
+                        <span class="spinner-border"></span>
                         Extract Information
                     </button>
                 </form>
                 <div id="extraction-result">
                     {% if extraction_output %}
                     <div class="mt-4">
-                        <h5 class="fw-semibold">Extraction Result:</h5>
+                        <h5>Extraction Result:</h5>
                         <table class="table table-bordered">
                             <tbody>
                                 {% for key, value in extraction_output.items() %}
                                 <tr>
-                                    <th scope="row" class="w-25">{{ key.replace('_', ' ') | title }}</th>
+                                    <th>{{ key.replace('_', ' ') | title }}</th>
                                     <td>{{ value }}</td>
                                 </tr>
                                 {% endfor %}
@@ -49,51 +45,51 @@
                     </div>
                     {% endif %}
                     {% if extraction_error %}
-                    <div class="alert alert-danger mt-4" role="alert">
+                    <div class="alert alert-danger mt-4">
                         {{ extraction_error }}
                     </div>
                     {% endif %}
                 </div>
             </div>
-            <div class="tab-pane fade" id="verification" role="tabpanel" aria-labelledby="verification-tab">
+            <div class="tab-pane" id="verification">
                 <form id="verification-form" action="/verification" method="post" enctype="multipart/form-data">
-                    <div class="mb-3">
+                    <div>
                         <label for="passport_img_verification" class="form-label">Upload Passport Image</label>
                         <input class="form-control" type="file" id="passport_img_verification" name="passport_img" required>
                     </div>
-                    <div class="mb-3">
+                    <div>
                         <label for="capture_img" class="form-label">Upload Your Image</label>
                         <input class="form-control" type="file" id="capture_img" name="capture_img" required>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">
-                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    <button type="submit" class="btn">
+                        <span class="spinner-border"></span>
                         Verify
                     </button>
                 </form>
                 <div id="verification-result">
                     {% if verification_result %}
                     <div class="mt-4 text-center">
-                        <h5 class="fw-semibold">Verification Result:</h5>
+                        <h5>Verification Result:</h5>
                         {% if verification_result.is_match %}
-                        <div class="alert alert-success" role="alert">
+                        <div class="alert alert-success">
                             Face matched! Similarity: {{ "%.2f"|format(verification_result.confidence_score) }}%
                         </div>
                         {% else %}
-                        <div class="alert alert-danger" role="alert">
+                        <div class="alert alert-danger">
                             Face not matched!
                         </div>
                         {% endif %}
                         
                         {% if verification_result.detected_face %}
                         <div class="mt-3">
-                            <h6 class="fw-semibold">Detected Face from Passport:</h6>
-                            <img src="{{ verification_result.detected_face }}" class="img-fluid rounded detected-face-img" alt="Detected Face">
+                            <h6>Detected Face from Passport:</h6>
+                            <img src="{{ verification_result.detected_face }}" class="detected-face-img" alt="Detected Face">
                         </div>
                         {% endif %}
                     </div>
                     {% endif %}
                     {% if verification_error %}
-                    <div class="alert alert-danger mt-4" role="alert">
+                    <div class="alert alert-danger mt-4">
                         {{ verification_error }}
                     </div>
                     {% endif %}
@@ -104,70 +100,63 @@
 </div>
 
 <script>
-    document.getElementById('extraction-form').addEventListener('submit', async function(event) {
-        event.preventDefault();
-        const form = event.target;
-        const button = form.querySelector('button[type="submit"]');
-        const spinner = button.querySelector('.spinner-border');
-        const resultDiv = document.getElementById('extraction-result');
+    document.addEventListener('DOMContentLoaded', function () {
+        const tabs = document.querySelectorAll('.nav-link');
+        const tabPanes = document.querySelectorAll('.tab-pane');
 
-        spinner.classList.remove('d-none');
-        button.disabled = true;
-        resultDiv.innerHTML = '';
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
 
-        try {
-            const formData = new FormData(form);
-            const response = await fetch(form.action, {
-                method: 'POST',
-                body: formData,
+                const target = tab.getAttribute('data-tab');
+                tabPanes.forEach(pane => {
+                    if (pane.id === target) {
+                        pane.classList.add('active');
+                    } else {
+                        pane.classList.remove('active');
+                    }
+                });
             });
+        });
 
-            const html = await response.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const newResult = doc.getElementById('extraction-result').innerHTML;
-            resultDiv.innerHTML = newResult;
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            const button = form.querySelector('button[type="submit"]');
+            const spinner = button.querySelector('.spinner-border');
+            const resultDivId = form.id === 'extraction-form' ? 'extraction-result' : 'verification-result';
+            const resultDiv = document.getElementById(resultDivId);
 
-        } catch (error) {
-            resultDiv.innerHTML = '<div class="alert alert-danger mt-4" role="alert">An unexpected error occurred.</div>';
-            console.error('Error:', error);
-        } finally {
-            spinner.classList.add('d-none');
-            button.disabled = false;
+            button.classList.add('loading');
+            button.disabled = true;
+            resultDiv.innerHTML = '';
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newResult = doc.getElementById(resultDivId).innerHTML;
+                resultDiv.innerHTML = newResult;
+
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="alert alert-danger mt-4" role="alert">An unexpected error occurred.</div>`;
+                console.error('Error:', error);
+            } finally {
+                button.classList.remove('loading');
+                button.disabled = false;
+            }
         }
-    });
 
-    document.getElementById('verification-form').addEventListener('submit', async function(event) {
-        event.preventDefault();
-        const form = event.target;
-        const button = form.querySelector('button[type="submit"]');
-        const spinner = button.querySelector('.spinner-border');
-        const resultDiv = document.getElementById('verification-result');
-
-        spinner.classList.remove('d-none');
-        button.disabled = true;
-        resultDiv.innerHTML = '';
-
-        try {
-            const formData = new FormData(form);
-            const response = await fetch(form.action, {
-                method: 'POST',
-                body: formData,
-            });
-
-            const html = await response.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const newResult = doc.getElementById('verification-result').innerHTML;
-            resultDiv.innerHTML = newResult;
-
-        } catch (error) {
-            resultDiv.innerHTML = '<div class="alert alert-danger mt-4" role="alert">An unexpected error occurred.</div>';
-            console.error('Error:', error);
-        } finally {
-            spinner.classList.add('d-none');
-            button.disabled = false;
-        }
+        document.getElementById('extraction-form').addEventListener('submit', handleFormSubmit);
+        document.getElementById('verification-form').addEventListener('submit', handleFormSubmit);
     });
 </script>
+
 {% endblock %}
