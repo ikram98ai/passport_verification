@@ -8,5 +8,6 @@ dependencies = [
     "fastapi[standard]>=0.116.1",
     "mangum>=0.19.0",
     "openai>=1.99.9",
+    "pillow>=11.3.0",
     "ruff>=0.12.9",
 ]

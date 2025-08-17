@@ -36,14 +36,14 @@ async def passport_info_extraction(
     ),
 ):
     try:
-        passport_base64 = await get_base64_url(passport_img)
-        output = await extract_info(passport_base64)
+        passport_base64_url = await get_base64_url(passport_img)
+        output = await extract_info(passport_base64_url)
 
     except HTTPException as e:
         traceback.print_exc()
         raise e
     except Exception as e:
-        print(f"Error during compliance verification: {e}")
+        print(f"Error during extracting data: {e}")
         traceback.print_exc()
         raise HTTPException(500, str(e))
     return templates.TemplateResponse(
@@ -62,17 +62,16 @@ async def passport_verification(
     ),
 ):
     try:
-        passport_base64 = await get_base64_url(passport_img)
-        capture_base64 = await get_base64_url(capture_img)
+        capture_base64_url = await get_base64_url(capture_img)
 
-        extract_base64 = await extract_image(passport_base64)
-        output = await verify_passport(extract_base64, capture_base64)
+        extract_base64_url = await extract_image(passport_img)
+        output = await verify_passport(extract_base64_url, capture_base64_url)
 
     except HTTPException as e:
         traceback.print_exc()
         raise e
     except Exception as e:
-        print(f"Error during compliance verification: {e}")
+        print(f"Error during passport verification: {e}")
         traceback.print_exc()
         raise HTTPException(500, str(e))
     return templates.TemplateResponse(
