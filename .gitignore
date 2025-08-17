@@ -9,3 +9,10 @@ wheels/
 # Virtual environments
 .venv
 .env
+.ruff_cache
+*.pyc
+.terraform
+.terraform*
+terraform.tfstate*
+*.csv
+test
