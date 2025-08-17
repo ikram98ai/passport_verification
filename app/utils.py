@@ -5,7 +5,7 @@ from PIL import Image
 from io import BytesIO
 from typing import List
 import base64
-import os
+import os, io
 
 load_dotenv()
 
@@ -48,35 +48,26 @@ async def get_base64_url(file: UploadFile) -> str:
         print(f"Error processing file {file.filename}: {e}")
         raise HTTPException(400, f"Error processing file {file.filename}: {str(e)}")
 
-async def get_base64(file: UploadFile) -> str:
-    # If UploadFile instances are provided, convert to base64
-    try:
-        print(f"Processing file: {file.filename}")
-        content = await file.read()
-        base64_image = base64.b64encode(content).decode("utf-8")
-        return base64_image
-    except Exception as e:
-        print(f"Error processing file {file.filename}: {e}")
-        raise HTTPException(400, f"Error processing file {file.filename}: {str(e)}")
-
+def get_base64_from_bytes(image_bytes: bytes) -> str:
+    base64_image = base64.b64encode(image_bytes).decode("utf-8")
+    return f"data:image/png;base64,{base64_image}"
 
 async def crop_image(passport_img: UploadFile, bbox) -> str:
     await passport_img.seek(0)
     img = await passport_img.read()
     image = Image.open(BytesIO(img))
 
-    # Crop the image
-    cropped_image = image.crop(
-        (bbox.x, bbox.y, bbox.x + bbox.width, bbox.y + bbox.height)
-    )
+    width, height = image.size
 
-    # Save the cropped image to a byte stream
-    byte_stream = BytesIO()
-    cropped_image.save(byte_stream, format="PNG")
-    content = byte_stream.getvalue()
+    left = int(bbox['Left'] * width)
+    top = int(bbox['Top'] * height)
+    box_width = int(bbox['Width'] * width)
+    box_height = int(bbox['Height'] * height)
 
-    base64_image = base64.b64encode(content).decode("utf-8")
-    return base64_image
+    cropped = image.crop((left, top, left + box_width, top + box_height))
+    buf = io.BytesIO()
+    cropped.save(buf, format="PNG")
+    return get_base64_from_bytes(buf.getvalue())
 
 
 def get_content_list(base64_urls: List[str], prompt):

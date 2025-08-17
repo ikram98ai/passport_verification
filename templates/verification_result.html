@@ -62,7 +62,20 @@
                 Passport Verification Result
             </div>
             <div class="card-body">
-                <pre>{{ output }}</pre>
+                {% if error %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error }}
+                    </div>
+                {% else %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h2>Similarity: {{ similarity|round(2) }}%</h2>
+                        </div>
+                        <div class="col-md-6">
+                            <img src="{{ matched_face }}" alt="Matched Face" class="img-fluid">
+                        </div>
+                    </div>
+                {% endif %}
             </div>
         </div>
         <div class="text-center mt-3">

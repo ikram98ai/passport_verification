@@ -3,11 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from mangum import Mangum
-from ai import extract_info, extract_image, verify_passport
+from ai import extract_info, verify_passport, FaceNotMatchedException
 from utils import get_base64_url
 import traceback
 
-app = FastAPI(version="0.0.0")
+app = FastAPI(version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -62,11 +62,20 @@ async def passport_verification(
     ),
 ):
     try:
-        capture_base64_url = await get_base64_url(capture_img)
-
-        extract_base64_url = await extract_image(passport_img)
-        output = await verify_passport(extract_base64_url, capture_base64_url)
-
+        similarity, matched_face = await verify_passport(capture_img, passport_img)
+        return templates.TemplateResponse(
+            "verification_result.html",
+            {
+                "request": request,
+                "similarity": similarity,
+                "matched_face": matched_face,
+            },
+        )
+    except FaceNotMatchedException as e:
+        return templates.TemplateResponse(
+            "verification_result.html",
+            {"request": request, "error": str(e)},
+        )
     except HTTPException as e:
         traceback.print_exc()
         raise e
@@ -74,9 +83,6 @@ async def passport_verification(
         print(f"Error during passport verification: {e}")
         traceback.print_exc()
         raise HTTPException(500, str(e))
-    return templates.TemplateResponse(
-        "verification_result.html", {"request": request, "output": output}
-    )
 
 
 handler = Mangum(app)

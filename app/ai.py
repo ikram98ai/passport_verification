@@ -1,7 +1,6 @@
 from pydantic import BaseModel
-from fastapi import UploadFile
 from prompts import INFO_EXTRACTION_PROMPT
-from utils import get_completion, get_content_list, get_base64, crop_image
+from utils import get_completion, get_content_list, crop_image
 import boto3
 
 
@@ -25,13 +24,16 @@ async def extract_info(passport_base64) -> PassportInfo:
     )
     return info
 
+class FaceNotMatchedException(Exception):
+    pass
+
 async def verify_passport(capture_img, passport_img):
 
     rekognition_client = boto3.client('rekognition')
 
     # Assuming images are in S3
-    source_image = await get_base64(capture_img)
-    target_image = await get_base64(passport_img)
+    source_image = await capture_img.read()
+    target_image = await passport_img.read()
 
     response = rekognition_client.compare_faces(
         SourceImage={'Bytes': source_image},
@@ -42,5 +44,8 @@ async def verify_passport(capture_img, passport_img):
         similarity = face_match['Similarity']
         bbox = face_match['Face']['BoundingBox']
 
-        print(f"Face matched with {similarity:.2f}% similarity.")
-        return similarity, crop_image(passport_img,bbox)
+        print(f"Face matched with {similarity:.2f}% similarity.\nBounding Box: {bbox}")
+        matched_face = await crop_image(passport_img,bbox)
+        return similarity, matched_face
+    
+    raise FaceNotMatchedException("Face is not Matched")
