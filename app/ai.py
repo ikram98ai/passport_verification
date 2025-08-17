@@ -51,6 +51,11 @@ async def extract_image(passport_img: UploadFile) -> bytes:
     return base64_url
 
 
+class PassportVerification(BaseModel):
+    same_person: bool
+    confidence_score: float
+    reasoning: str
+
 async def verify_passport(extracted_base64_url, capture_base64_url):
     content = get_content_list(
         [extracted_base64_url,capture_base64_url], "Verify that if the first image has the same person as in the second image."
@@ -59,7 +64,7 @@ async def verify_passport(extracted_base64_url, capture_base64_url):
     output = await get_completion(
         instruction=PERSON_VERIFICATION_PROMPT,
         content=content,
-        output_type=Bbox,
+        output_type=PassportVerification,
         model="gemini-2.5-flash",
     )
 
