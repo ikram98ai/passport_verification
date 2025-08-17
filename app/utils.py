@@ -5,7 +5,8 @@ from PIL import Image
 from io import BytesIO
 from typing import List
 import base64
-import os, io
+import os
+import io
 
 load_dotenv()
 
