@@ -1,6 +1,5 @@
 from pydantic import BaseModel
-from prompts import INFO_EXTRACTION_PROMPT
-from utils import get_completion, get_content_list, crop_image
+from .utils import get_completion, get_content_list, crop_image
 import boto3
 
 
@@ -15,6 +14,9 @@ class PassportInfo(BaseModel):
     expiration_date: str
 
 
+INFO_EXTRACTION_PROMPT = """Extract all info from the given passport image"""
+
+
 async def extract_info(passport_base64) -> PassportInfo:
     content = get_content_list(
         [passport_base64], "Extract information from this passport."
@@ -24,28 +26,29 @@ async def extract_info(passport_base64) -> PassportInfo:
     )
     return info
 
+
 class FaceNotMatchedException(Exception):
     pass
 
-async def verify_passport(capture_img, passport_img):
 
-    rekognition_client = boto3.client('rekognition')
+async def verify_passport(capture_img, passport_img):
+    rekognition_client = boto3.client("rekognition")
 
     # Assuming images are in S3
     source_image = await capture_img.read()
     target_image = await passport_img.read()
 
     response = rekognition_client.compare_faces(
-        SourceImage={'Bytes': source_image},
-        TargetImage={'Bytes': target_image},
-        SimilarityThreshold=90 # Set your desired threshold
+        SourceImage={"Bytes": source_image},
+        TargetImage={"Bytes": target_image},
+        SimilarityThreshold=90,  # Set your desired threshold
     )
-    for face_match in response['FaceMatches']:
-        similarity = face_match['Similarity']
-        bbox = face_match['Face']['BoundingBox']
+    for face_match in response["FaceMatches"]:
+        similarity = face_match["Similarity"]
+        bbox = face_match["Face"]["BoundingBox"]
 
         print(f"Face matched with {similarity:.2f}% similarity.\nBounding Box: {bbox}")
-        matched_face = await crop_image(passport_img,bbox)
+        matched_face = await crop_image(passport_img, bbox)
         return similarity, matched_face
-    
+
     raise FaceNotMatchedException("Face is not Matched")

@@ -3,8 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from mangum import Mangum
-from ai import extract_info, verify_passport, FaceNotMatchedException
-from utils import get_base64_url
+from .ai import extract_info, verify_passport, FaceNotMatchedException
+from .utils import get_base64_url
 import traceback
 
 app = FastAPI(version="1.0.0")

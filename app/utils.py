@@ -48,9 +48,11 @@ async def get_base64_url(file: UploadFile) -> str:
         print(f"Error processing file {file.filename}: {e}")
         raise HTTPException(400, f"Error processing file {file.filename}: {str(e)}")
 
+
 def get_base64_from_bytes(image_bytes: bytes) -> str:
     base64_image = base64.b64encode(image_bytes).decode("utf-8")
     return f"data:image/png;base64,{base64_image}"
+
 
 async def crop_image(passport_img: UploadFile, bbox) -> str:
     await passport_img.seek(0)
@@ -59,10 +61,10 @@ async def crop_image(passport_img: UploadFile, bbox) -> str:
 
     width, height = image.size
 
-    left = int(bbox['Left'] * width)
-    top = int(bbox['Top'] * height)
-    box_width = int(bbox['Width'] * width)
-    box_height = int(bbox['Height'] * height)
+    left = int(bbox["Left"] * width)
+    top = int(bbox["Top"] * height)
+    box_width = int(bbox["Width"] * width)
+    box_height = int(bbox["Height"] * height)
 
     cropped = image.crop((left, top, left + box_width, top + box_height))
     buf = io.BytesIO()
@@ -72,15 +74,15 @@ async def crop_image(passport_img: UploadFile, bbox) -> str:
 
 def get_content_list(base64_urls: List[str], prompt):
     content = [
-            {
-                "type": "text",
-                "text": prompt,
-            }
-        ] + [
-            {
-                "type": "image_url",
-                "image_url": {"url": base64_url},
-            }
-            for base64_url in base64_urls
-        ]
+        {
+            "type": "text",
+            "text": prompt,
+        }
+    ] + [
+        {
+            "type": "image_url",
+            "image_url": {"url": base64_url},
+        }
+        for base64_url in base64_urls
+    ]
     return content
