@@ -110,6 +110,7 @@ p {
     border-radius: 8px;
     transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
     margin-bottom: 1.5rem;
+    box-sizing: border-box;
 }
 
 .form-control:focus {
@@ -121,13 +122,13 @@ p {
 }
 
 .btn {
-    display: inline-block;
+    display: block;
+    box-sizing: border-box;
     font-weight: 500;
     line-height: 1.5;
     color: #fff;
     text-align: center;
     text-decoration: none;
-    vertical-align: middle;
     cursor: pointer;
     user-select: none;
     background-color: #1a73e8;
