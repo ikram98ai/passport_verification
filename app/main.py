@@ -28,8 +28,8 @@ async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
-@app.post("/verification", response_class=HTMLResponse)
-async def passport_verification(
+@app.post("/extraction", response_class=HTMLResponse)
+async def passport_info_extraction(
     request: Request,
     passport_img: UploadFile = File(
         ..., description="Upload an image of passport for verification."
@@ -47,12 +47,13 @@ async def passport_verification(
         traceback.print_exc()
         raise HTTPException(500, str(e))
     return templates.TemplateResponse(
-        "verification_result.html", {"request": request, "output": output}
+        "extraction_result.html", {"request": request, "output": output}
     )
 
 
-@app.post("/extraction", response_class=HTMLResponse)
-async def passport_info_extraction(
+
+@app.post("/verification", response_class=HTMLResponse)
+async def passport_verification(
     request: Request,
     passport_img: UploadFile = File(
         ..., description="Upload an image of passport for verification."
@@ -76,7 +77,7 @@ async def passport_info_extraction(
         traceback.print_exc()
         raise HTTPException(500, str(e))
     return templates.TemplateResponse(
-        "extraction_result.html", {"request": request, "output": output}
+        "verification_result.html", {"request": request, "output": output}
     )
 
 
