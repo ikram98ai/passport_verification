@@ -23,6 +23,9 @@
                         <label for="passport_img_extraction" class="form-label">Upload Passport Image</label>
                         <input class="form-control" type="file" id="passport_img_extraction" name="passport_img" required>
                     </div>
+                    <div id="image-preview-container-extraction" class="image-preview-container">
+                        <img id="passport-preview-extraction" src="#" alt="Passport Preview"/>
+                    </div>
                     <button type="submit" class="btn">
                         <span class="spinner-border"></span>
                         Extract Information
@@ -53,13 +56,21 @@
             </div>
             <div class="tab-pane" id="verification">
                 <form id="verification-form" action="/verification" method="post" enctype="multipart/form-data">
-                    <div>
-                        <label for="passport_img_verification" class="form-label">Upload Passport Image</label>
-                        <input class="form-control" type="file" id="passport_img_verification" name="passport_img" required>
-                    </div>
-                    <div>
-                        <label for="capture_img" class="form-label">Upload Your Image</label>
-                        <input class="form-control" type="file" id="capture_img" name="capture_img" required>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="passport_img_verification" class="form-label">Upload Passport Image</label>
+                            <input class="form-control" type="file" id="passport_img_verification" name="passport_img" required>
+                            <div id="image-preview-container-verification-passport" class="image-preview-container">
+                                <img id="passport-preview-verification-passport" src="#" alt="Passport Preview"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="capture_img" class="form-label">Upload Your Image</label>
+                            <input class="form-control" type="file" id="capture_img" name="capture_img" required>
+                            <div id="image-preview-container-verification-capture" class="image-preview-container">
+                                <img id="passport-preview-verification-capture" src="#" alt="Capture Preview"/>
+                            </div>
+                        </div>
                     </div>
                     <button type="submit" class="btn">
                         <span class="spinner-border"></span>
@@ -156,6 +167,64 @@
 
         document.getElementById('extraction-form').addEventListener('submit', handleFormSubmit);
         document.getElementById('verification-form').addEventListener('submit', handleFormSubmit);
+
+
+        const passportExtractionInput = document.getElementById('passport_img_extraction');
+        const passportExtractionPreview = document.getElementById('passport-preview-extraction');
+        const passportExtractionPreviewContainer = document.getElementById('image-preview-container-extraction');
+
+        passportExtractionInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    passportExtractionPreview.src = e.target.result;
+                    passportExtractionPreviewContainer.style.display = 'flex';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                passportExtractionPreview.src = '#';
+                passportExtractionPreviewContainer.style.display = 'none';
+            }
+        });
+
+        const passportVerificationInput = document.getElementById('passport_img_verification');
+        const passportVerificationPreview = document.getElementById('passport-preview-verification-passport');
+        const passportVerificationPreviewContainer = document.getElementById('image-preview-container-verification-passport');
+
+        passportVerificationInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    passportVerificationPreview.src = e.target.result;
+                    passportVerificationPreviewContainer.style.display = 'flex';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                passportVerificationPreview.src = '#';
+                passportVerificationPreviewContainer.style.display = 'none';
+            }
+        });
+
+        const captureInput = document.getElementById('capture_img');
+        const capturePreview = document.getElementById('passport-preview-verification-capture');
+        const capturePreviewContainer = document.getElementById('image-preview-container-verification-capture');
+
+        captureInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    capturePreview.src = e.target.result;
+                    capturePreviewContainer.style.display = 'flex';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                capturePreview.src = '#';
+                capturePreviewContainer.style.display = 'none';
+            }
+        });
     });
 </script>
 

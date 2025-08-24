@@ -1,7 +1,7 @@
 [project]
 name = "passport-verification"
 version = "0.1.0"
-description = "Add your description here"
+description = "Developed by ikram98ai"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [

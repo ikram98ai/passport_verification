@@ -242,6 +242,26 @@ footer {
     border-top: 1px solid #e9ecef;
 }
 
+.image-preview-container {
+    width: 100%;
+    height: 300px;
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+#passport-preview-extraction, #passport-preview-verification-passport, #passport-preview-verification-capture {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    align-items: center;
+    height: auto;
+}
+
 .detected-face-img {
     max-width: 200px;
     max-height: 200px;
@@ -249,4 +269,13 @@ footer {
     height: auto;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.form-group {
+    flex: 1;
 }
